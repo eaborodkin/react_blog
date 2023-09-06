@@ -1,11 +1,30 @@
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import useFetch from "./useFetch";
-import BlogList from "./BlogList";
+import {useState} from "react";
 
 const BlogDetails = () => {
     const {id} = useParams()
-
     const {data: blog, error, isPending} = useFetch(`http://localhost:8000/blogs/${id}`)
+    const [delError, setDelError] = useState(null)
+    const [isDelPending, setIsDelPending] = useState(false)
+    const navigate = useNavigate()
+
+    const handleDelete = () => {
+        setIsDelPending(true)
+        fetch(`http://localhost:8000/blogs/${id}`, {
+            method: 'DELETE',
+        }).then(response => {
+            if (!response.ok) {
+                throw Error('Something went wrong! Try your attempt later.')
+            }
+            setIsDelPending(false)
+            setDelError(null)
+            navigate('/')
+        }).catch(error => {
+            setIsDelPending(false)
+            setDelError(error.message)
+        })
+    }
 
     return (
         <div className="blog-details">
@@ -16,9 +35,11 @@ const BlogDetails = () => {
                     <h2>{blog.title}</h2>
                     <p>Written by {blog.author}</p>
                     <div>{blog.body}</div>
+                    {delError && <div>{delError}</div>}
+                    {!isDelPending && <button onClick={handleDelete}>Delete the blog</button>}
+                    {isDelPending && <button disabled>Deleting the blog...</button>}
                 </article>
             )}
-            <h2>Blog Details {id}.</h2>
         </div>
     )
 }
