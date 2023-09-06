@@ -1,9 +1,11 @@
 import {useEffect, useState} from "react";
+import {useNavigate} from "react-router-dom";
 
 const useFetch = (url) => {
     const [data, setData] = useState(null)
     const [isPending, setIsPending] = useState(true)
     const [error, setError] = useState(null)
+    const navigate = useNavigate()
 
     useEffect(() => {
         const abortCont = new AbortController()
@@ -11,7 +13,13 @@ const useFetch = (url) => {
         fetch(url, {signal: abortCont.signal})
             .then(response => {
                 if (!response.ok) {
-                    throw Error('Something went wrong! Try your attempt later.')
+                    switch (response.status) {
+                        case 404:
+                            navigate('/not-found')
+                            break
+                        default:
+                            throw Error('Something went wrong! Try your attempt later.')
+                    }
                 }
                 return response.json()
             })
